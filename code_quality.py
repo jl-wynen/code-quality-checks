@@ -90,14 +90,14 @@ def parse_diff(diff, n_path_strip):
     return lines
 
 
-def run_formatter(cmd, modified_lines, extensions, line_separator):
+def run_formatter(cmd, modified_lines, extensions, line_separator, cwd):
     for fname, lines in filter(lambda t: t[0].suffix in extensions, modified_lines.items()):
-        subprocess.check_call([cmd, str(fname), '-i', *[f'--lines={l.start}{line_separator}{l.stop}' for l in lines]])
+        subprocess.check_call([cmd, str(fname), '-i', *[f'--lines={l.start}{line_separator}{l.stop}' for l in lines]], cwd=cwd)
 
 
-def run_flake8(cmd, modified_lines):
+def run_flake8(cmd, modified_lines, cwd):
     for fname in filter(lambda fn: fn.suffix in PY_EXTENSIONS, modified_lines):
-        subprocess.run([cmd, str(fname)])
+        subprocess.run([cmd, str(fname)], cwd=cwd)
 
 
 def main():
@@ -107,11 +107,11 @@ def main():
     modified_lines = parse_diff(diff, args.prefix)
 
     if args.clang_format:
-        run_formatter(args.clang_format, modified_lines, CPP_EXTENSIONS, ':')
+        run_formatter(args.clang_format, modified_lines, CPP_EXTENSIONS, ':', repo_root)
     if args.yapf:
-        run_formatter(args.yapf, modified_lines, PY_EXTENSIONS, '-')
+        run_formatter(args.yapf, modified_lines, PY_EXTENSIONS, '-', repo_root)
     if args.flake8:
-        run_flake8(args.flake8, modified_lines)
+        run_flake8(args.flake8, modified_lines, repo_root)
 
 
 if __name__ == '__main__':
